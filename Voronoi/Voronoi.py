@@ -14,9 +14,9 @@ cell_info.columns = ("name", "x", "y")
 
 # 随机抽取
 if SAMPLE_LIMIT:
-    cells = np.array([(cell_info["x"][i], cell_info["y"][i]) for i in np.random.choice(len(cell_info), size = SAMPLE_LIMIT)])
+    cells = np.array((cell_info[["x", "y"]].iloc[np.random.choice(len(cell_info), size = SAMPLE_LIMIT)]))
 else:
-    cells = np.array(cell_info["x", "y"])
+    cells = np.array(cell_info[["x", "y"]])
 
 # compute Voronoi tesselation
 vor = Voronoi(cells)
