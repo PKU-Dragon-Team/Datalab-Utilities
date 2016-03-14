@@ -102,7 +102,8 @@ def fetchImage(url):
     
     return image_3d
 
-def plotMap(image):
+def plotMap(image, alpha=1, show=False):
     # TODO: 透明、对齐
-    plt.imshow(image, alpha=0.5)
-    plt.show()
+    plt.imshow(image, alpha=alpha)
+    if show:
+        plt.show()
