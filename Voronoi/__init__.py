@@ -1,43 +1,63 @@
+"""Module to compute and show Voronoi figure
+"""
+import os
+import typing as tg
+
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi, voronoi_plot_2d
-import pandas
+import pandas as pd
 
-import os
-
-__location__ = os.path.join(os.getcwd(), os.path.dirname(os.path.realpath(__file__)))
+__location__ = os.path.join(os.getcwd(),
+                            os.path.dirname(os.path.realpath(__file__)))
 
 COUNT_LIMIT = None
-SAMPLE_LIMIT = 20
 
-def voronoi(show=True):
-    cell_info = pandas.read_csv(os.path.join(__location__, 'cell_info.csv'), header=None, dtype={0: str, 1: float, 2:float}, nrows=COUNT_LIMIT)
-    cell_info.columns = ("name", "x", "y")
 
-    # 随机抽取
-    if SAMPLE_LIMIT:
-        cells = np.array((cell_info[["x", "y"]].iloc[np.random.choice(len(cell_info), size = SAMPLE_LIMIT)]))
+def voronoi(cell_info: pd.DataFrame,
+            show: bool=True,
+            color_set: pd.DataFrame=None,
+            sample_limit: int=20) -> None:
+    """the function to compute and show voronoi figure
+    """
+    # ramdom sampling
+    if sample_limit:
+        ramdom_list = np.random.choice(len(cell_info), size=sample_limit)
+        cells = np.array((cell_info[["x", "y"]].iloc[ramdom_list]))
+        color = np.array((color_set.iloc[ramdom_list]))
     else:
         cells = np.array(cell_info[["x", "y"]])
-
+        color = np.array(color_set)
     # compute Voronoi tesselation
     vor = Voronoi(cells)
-
     # plot
-    fig = voronoi_plot_2d(vor)
-    fig.canvas.set_window_title("基站服务范围示意图")
-    title = fig.suptitle("cell_info")
-    ax = fig.gca()
-    ax.set_aspect(1.)
+    # fig = voronoi_plot_2d(vor)
 
+    # plt.canvas.set_window_title("cell_info")
+    _ = plt.suptitle("cell_info")
+    ax = plt.gca()
+    ax.set_aspect(1.)
     # colorize
-    for region in vor.regions:
+    for i in range(len(cells)):
+        region = vor.regions[vor.point_region[i]]
         if -1 not in region:
-            polygon = [vor.vertices[i] for i in region]
-            _ = ax.fill(*zip(*polygon)) # plt.fill((x0, x1, x2, x3, ...), (y0, y1, y2, y3, ...), color=None)
+            polygon = [vor.vertices[j] for j in region]
+            z = list(zip(*polygon))
+            # plt.fill((x0, x1, x2, x3, ...), (y0, y1, y2, y3, ...), color=None)
+            _ = ax.fill(z[0], z[1], color=color[i])
     if show:
         plt.show()
- 
+
+
 if __name__ == '__main__':
-    voronoi()
+    cell_info = pd.read_csv(
+        os.path.join(__location__, 'cell_info.csv'),
+        header=None,
+        dtype={
+            0: str,
+            1: float,
+            2: float
+        },
+        nrows=COUNT_LIMIT)
+    cell_info.columns = ("name", "x", "y")
+    voronoi(cell_info)

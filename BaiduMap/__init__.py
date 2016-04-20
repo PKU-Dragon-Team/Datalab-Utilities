@@ -89,7 +89,7 @@ def buildURL(width=None, height=None, certer=[], zoom=None, copyright=1, scale=2
     
     return url.generateURL()
 
-def fetchImage(url):
+def fetchImage(url : str) -> numpy.matrix:
     r = png.Reader(file=urllib.request.urlopen(url))
     data = r.asFloat()
     column_count = data[0]
@@ -102,7 +102,7 @@ def fetchImage(url):
     
     return image_3d
 
-def plotMap(image, alpha=1, show=False):
+def plotMap(image : numpy.matrix, alpha=1, show=False):
     # TODO: 透明、对齐
     plt.imshow(image, alpha=alpha)
     if show:
