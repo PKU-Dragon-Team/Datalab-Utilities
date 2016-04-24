@@ -1,11 +1,11 @@
 """Module to compute and show Voronoi figure
 """
 import os
-import typing as tg
+# import typing as tg
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import Voronoi, voronoi_plot_2d
+from scipy.spatial import Voronoi
 import pandas as pd
 
 __location__ = os.path.join(os.getcwd(),

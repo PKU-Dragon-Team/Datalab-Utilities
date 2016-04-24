@@ -1,5 +1,3 @@
-from .. import Voronoi
-
 # import numpy as np
 import pandas as pd
 import sklearn
@@ -10,8 +8,15 @@ import os
 import json
 import decimal
 import typing as tg
-__location__ = os.path.join(os.getcwd(),
-                            os.path.dirname(os.path.realpath(__file__)))
+import sys
+from pathlib import Path
+
+__location__ = os.path.join(os.getcwd(), os.path.dirname(os.path.realpath(__file__)))
+__path__ = Path(__location__)
+
+sys.path.append(str(__path__.parent))
+
+import Voronoi
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -44,7 +49,7 @@ def main() -> None:
                                  charset=CHARSET,
                                  cursorclass=pymysql.cursors.DictCursor)
 
-    sql = "SELECT location, day_type, shour, usr_count, x, y FROM `loc_week_count_copy`"
+    sql = "SELECT location, day_type, shour, usr_count, x, y FROM `loc_week_count`"
     data = pd.read_sql(sql, connection)
 
     dset = {}
@@ -63,9 +68,9 @@ def main() -> None:
     location = pd.DataFrame.from_records([row for row in dframe.index])
     location.columns = ("x", "y")
 
-    kmeans = sklearn.cluster.MiniBatchKMeans()
+    kmeans = sklearn.cluster.MiniBatchKMeans(n_clusters=5)
     result = kmeans.fit_predict(dframe)
-    color = (result + 1) / 8
+    color = (result + 1) / 5
 
     rgb_color = []
     for x in color:
