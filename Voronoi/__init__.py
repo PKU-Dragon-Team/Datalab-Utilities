@@ -4,6 +4,7 @@ import os
 # import typing as tg
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi
 import pandas as pd
@@ -14,10 +15,7 @@ __location__ = os.path.join(os.getcwd(),
 COUNT_LIMIT = None
 
 
-def voronoi(cell_info: pd.DataFrame,
-            show: bool=True,
-            color_set: pd.DataFrame=None,
-            sample_limit: int=20) -> None:
+def voronoi(cell_info: pd.DataFrame, show: bool=True, color_set: pd.DataFrame=None, sample_limit: int=20, target_axes: matplotlib.axes.Axes=None) -> None:
     """the function to compute and show voronoi figure
     """
     # ramdom sampling
@@ -28,15 +26,17 @@ def voronoi(cell_info: pd.DataFrame,
     else:
         cells = np.array(cell_info[["x", "y"]])
         color = np.array(color_set)
+
     # compute Voronoi tesselation
     vor = Voronoi(cells)
-    # plot
-    # fig = voronoi_plot_2d(vor)
 
-    # plt.canvas.set_window_title("cell_info")
-    _ = plt.suptitle("cell_info")
-    ax = plt.gca()
+    # plot
+    if target_axes:
+        ax = target_axes
+    else:
+        ax = plt.gca()
     ax.set_aspect(1.)
+
     # colorize
     for i in range(len(cells)):
         region = vor.regions[vor.point_region[i]]
@@ -44,7 +44,7 @@ def voronoi(cell_info: pd.DataFrame,
             polygon = [vor.vertices[j] for j in region]
             z = list(zip(*polygon))
             # plt.fill((x0, x1, x2, x3, ...), (y0, y1, y2, y3, ...), color=None)
-            _ = ax.fill(z[0], z[1], color=color[i])
+            ax.fill(z[0], z[1], color=color[i])
     if show:
         plt.show()
 

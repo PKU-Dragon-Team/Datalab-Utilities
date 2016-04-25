@@ -1,8 +1,11 @@
-# import numpy as np
+"""the package for clustering mobile_data
+"""
 import pandas as pd
 import sklearn
 import sklearn.cluster
 import pymysql
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 
 import os
 import json
@@ -42,12 +45,7 @@ def main() -> None:
         DATABASE = conf['database']
         CHARSET = conf['charset']
 
-    connection = pymysql.connect(host=HOST,
-                                 user=USER,
-                                 password=PASS,
-                                 db=DATABASE,
-                                 charset=CHARSET,
-                                 cursorclass=pymysql.cursors.DictCursor)
+    connection = pymysql.connect(host=HOST, user=USER, password=PASS, db=DATABASE, charset=CHARSET, cursorclass=pymysql.cursors.DictCursor)
 
     sql = "SELECT location, day_type, shour, usr_count, x, y FROM `loc_week_count`"
     data = pd.read_sql(sql, connection)
@@ -56,7 +54,7 @@ def main() -> None:
     for i in range(len(data)):
         row = data.iloc[i]
         try:
-            _ = dset[(row.x, row.y)]
+            dset[(row.x, row.y)]
         except KeyError:
             dset[(row.x, row.y)] = [0] * 2 * 24
         if row.day_type == "weekday":
@@ -68,14 +66,25 @@ def main() -> None:
     location = pd.DataFrame.from_records([row for row in dframe.index])
     location.columns = ("x", "y")
 
-    kmeans = sklearn.cluster.MiniBatchKMeans(n_clusters=5)
-    result = kmeans.fit_predict(dframe)
-    color = (result + 1) / 5
-
-    rgb_color = []
-    for x in color:
-        rgb_color.append(gray2rgb(x))
-
-    Voronoi.voronoi(location, color_set=pd.DataFrame.from_records(rgb_color))
+    cluster_range = range(5, 11)
+    for i, c in enumerate(cluster_range, start=1):
+        ax = plt.subplot(4, 2, i)
+        kmeans = sklearn.cluster.MiniBatchKMeans(n_clusters=c)
+        result = kmeans.fit_predict(dframe)
+        color = (result + 1) / (c + 1)
+        rgb_color = [gray2rgb(x) for x in color]
+        handles = [mpatches.Patch(color=gray2rgb((i + 1) / (c + 1)), label='cluster %d' % (i + 1)) for i in range(c)]
+        if i % 2 != 0:
+            anchor = (-0.3, 0.5)
+            loc = 7
+        else:
+            anchor = (1.05, 0.5)
+            loc = 6
+        ax.legend(handles=handles, bbox_to_anchor=anchor, loc=loc, borderaxespad=0.0)
+        ax.set_autoscale_on(False)
+        ax.set_xlim(115.8, 116.9)
+        ax.set_ylim(39.6, 40.3)
+        Voronoi.voronoi(location, color_set=pd.DataFrame.from_records(rgb_color), target_axes=ax, show=False)
+    plt.show()
 
     connection.close()
