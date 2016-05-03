@@ -1,3 +1,3 @@
 import mobile_cluster
 
-# mobile_cluster.main()
+mobile_cluster.main()
