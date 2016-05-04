@@ -37,43 +37,42 @@ def method_1994(X: np.matrix, Ra: float=2.0, Rb: float=3.0, epsilon_upper: float
     potential = []  # heapq
     # calc the first center
     for i, x in enumerate(X):
-        heapq.heappush(potential, (-cal_potential(np.array(x), X, alpha), i))  # heapq only provides min-heap, WTF
+        heapq.heappush(potential, (-cal_potential(i, X, alpha), i))  # heapq only provides min-heap, WTF
     first_center = heapq.heappop(potential)
 
-    centers = [first_center, ]  # KDTree is not modifiable, so use plain method
     first_center_p = -first_center[0]  # SB heapq
+    centers = [(first_center_p, first_center[1])]  # KDTree is not modifiable, so use plain method
 
     potential_clone = []
     for point in potential:
         heapq.heappush(potential_clone, (cal_new_potential(point, first_center, X, beta), point[1]))
     potential = potential_clone
 
-    while True:
-        most_potential, most_potential_i = heapq.heappop(potential)
+    while len(potential) > 0:
+        most_potential_p, most_potential_i = heapq.heappop(potential)
 
         while True:
-            most_potential = -most_potential  # SB heapq again
-            if most_potential > epsilon_upper * first_center_p:
+            most_potential_p = -most_potential_p  # SB heapq again
+            if most_potential_p > epsilon_upper * first_center_p:
                 accepted = True
                 break
-            elif most_potential < epsilon_lower * first_center_p:
+            elif most_potential_p < epsilon_lower * first_center_p:
                 accepted = False
                 break
-            elif cal_d_min(X[most_potential_i, :], centers, X) / Ra + most_potential / first_center_p > 1:
+            elif cal_d_min(X[most_potential_i, :], centers, X) / Ra + most_potential_p / first_center_p > 1:
                 accepted = True
                 break
             else:
-                most_potential, most_potential_i = heapq.heappushpop(potential, (0, most_potential_i))
+                most_potential_p, most_potential_i = heapq.heappushpop(potential, (0, most_potential_i))
 
         if accepted:
-            centers.append(most_potential)
+            centers.append((most_potential_p, most_potential_i))
             potential_clone = []
 
             for point in potential:
-                heapq.heappush(potential_clone, (cal_new_potential(point, most_potential, X, beta), point[1]))
+                heapq.heappush(potential_clone, (cal_new_potential(point, (most_potential_p, most_potential_i), X, beta), point[1]))
             potential = potential_clone
         else:
             break
-
-    return tuple(*zip(*centers))
+    return tuple(zip(*centers))
     # Question: what is the return value?
