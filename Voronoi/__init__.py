@@ -9,8 +9,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi
 import pandas as pd
 
-__location__ = os.path.join(os.getcwd(),
-                            os.path.dirname(os.path.realpath(__file__)))
+__location__ = os.path.join(os.getcwd(), os.path.dirname(os.path.realpath(__file__)))
 
 COUNT_LIMIT = None
 
@@ -27,7 +26,7 @@ def voronoi(cell_info: pd.DataFrame, show: bool=True, color_set: pd.DataFrame=No
         cells = np.array(cell_info[["x", "y"]])
         color = np.array(color_set)
 
-    # compute Voronoi tesselation
+# compute Voronoi tesselation
     vor = Voronoi(cells)
 
     # plot
@@ -48,16 +47,7 @@ def voronoi(cell_info: pd.DataFrame, show: bool=True, color_set: pd.DataFrame=No
     if show:
         plt.show()
 
-
 if __name__ == '__main__':
-    cell_info = pd.read_csv(
-        os.path.join(__location__, 'cell_info.csv'),
-        header=None,
-        dtype={
-            0: str,
-            1: float,
-            2: float
-        },
-        nrows=COUNT_LIMIT)
+    cell_info = pd.read_csv(os.path.join(__location__, 'cell_info.csv'), header=None, dtype={0: str, 1: float, 2: float}, nrows=COUNT_LIMIT)
     cell_info.columns = ("name", "x", "y")
     voronoi(cell_info)

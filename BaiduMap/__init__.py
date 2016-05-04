@@ -17,6 +17,7 @@ with open(os.path.join(__location__, 'config.json'), 'r') as config:
 
 BASE_URL = "%s?ak=%s" % (SERVER_URL, AK)
 
+
 class URLBuilder:
     def __init__(self, base_url):
         if '?' not in base_url:
@@ -24,29 +25,30 @@ class URLBuilder:
         self.__base_url = base_url
         self.__url = base_url
         self.__attr = OrderedDict()
-    
+
     def __addParam(self, name, value):
         if not self.__url.endswith('&'):
-           self.__url += '&'
+            self.__url += '&'
         self.__url += "%s=%s" % (name, value)
-    
+
     def __resetURL(self):
         self.__url = self.__base_url
-    
+
     def addParam(self, name, value):
         self.__attr[str(name)] = str(value)
-    
+
     def removeParam(self, name):
         try:
             del self.__attr[str(name)]
         except KeyError:
             pass
-    
+
     def generateURL(self):
         self.__resetURL()
         for item in self.__attr.items():
             self.__addParam(item[0], item[1])
         return self.__url
+
 
 def buildURL(width=None, height=None, certer=[], zoom=None, copyright=1, scale=2, bbox=[], markers=[], markerStyles=[], labels=[], labelStyles=[], paths=[], pathStyles=[]):
 
@@ -86,23 +88,25 @@ def buildURL(width=None, height=None, certer=[], zoom=None, copyright=1, scale=2
     if pathStyles:
         pass
         # not implemented
-    
+
     return url.generateURL()
 
-def fetchImage(url : str) -> numpy.matrix:
+
+def fetchImage(url: str) -> numpy.matrix:
     r = png.Reader(file=urllib.request.urlopen(url))
     data = r.asFloat()
     column_count = data[0]
     row_count = data[1]
     pngdata = data[2]
     plane_count = data[3]['planes']
-    
+
     image_2d = numpy.vstack(map(numpy.float_, pngdata))
     image_3d = numpy.reshape(image_2d, (row_count, column_count, plane_count))
-    
+
     return image_3d
 
-def plotMap(image : numpy.matrix, alpha=1, show=False):
+
+def plotMap(image: numpy.matrix, alpha=1, show=False):
     # TODO: 透明、对齐
     plt.imshow(image, alpha=alpha)
     if show:
