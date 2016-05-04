@@ -7,34 +7,32 @@ import typing as tg
 import heapq
 
 
-def method_1994(X: tg.Dict[tg.Tuple, tg.List], Ra: float=2.0, Rb: float=3.0, epsilon_upper: np.double=np.double(0.5), epsilon_lower: np.double=np.double(0.15)) -> (int, tg.Dict):
+def method_1994(X: np.matrix, Ra: float=2.0, Rb: float=3.0, epsilon_upper: float=0.5, epsilon_lower: float=0.15) -> tg.Tuple[tg.List[int], tg.List[float]]:
     """funtion that use the 1994 Fuzzy Model Identification Based on Cluster Estimation method
+        return the index of Cluster point in X and the potential of them
     """
 
-    def cal_potential(x: np.array, X: np.matrix, alpha: np.double=np.double(1.0)) -> np.double:
+    def cal_potential(xi: int, X: np.matrix, alpha: float=1.0) -> float:
         """Function calculate the potential of point x become a cluster center
         """
-        return np.sum(np.exp(-alpha * spatial.distance.sqeuclidean(X, x)))
+        return np.sum(np.exp(-alpha * np.power(X - X[xi, :], 2)))  # Here didn't exclude the xi row. The result is different but it dosn't affect the sequence.
 
-    def cal_new_potential(old: tg.Tuple[np.double, int], center: tg.Tuple[np.double, int], X: np.matrix, beta: np.double=np.double(4 / 9)) -> np.double:
+    def cal_new_potential(old: tg.Tuple[np.double, int], center: tg.Tuple[np.double, int], X: np.matrix, beta: float=4.0 / 9) -> float:
         """Function calculate the updated potential of point x after a new cluster center occurs
         """
         return old[0] - center[0] * np.exp(-beta * spatial.distance.sqeuclidean(X[old[1], :], X[center[1], :]))
 
-    def cal_d_min(x: np.array, centers: tg.List[tg.Tuple[np.double, int]], X: np.matrix) -> np.double:
-        """Function calculate the shortest distance between point x and all previous cluster centers
+    def cal_d_min(xi: int, centers: tg.List[tg.Tuple[np.double, int]], X: np.matrix) -> float:
+        """Function calculate the shortest distance between point X[xi, :] and all previous cluster centers
         """
         distance = []  # heapq
         for _, i in centers:
-            heapq.heappush(distance, spatial.distance.euclidean(x, X[i, :]))
+            heapq.heappush(distance, spatial.distance.euclidean(X[xi, :], X[i, :]))
 
         return distance[0]
 
     alpha = 4 / Ra**2
     beta = 4 / Rb**2
-
-    names, positions = [x for x in zip(*X.items())]
-    X = np.matrix(positions)
 
     potential = []  # heapq
     # calc the first center
@@ -43,15 +41,19 @@ def method_1994(X: tg.Dict[tg.Tuple, tg.List], Ra: float=2.0, Rb: float=3.0, eps
     first_center = heapq.heappop(potential)
 
     centers = [first_center, ]  # KDTree is not modifiable, so use plain method
-    first_center_p = -first_center[0]
-    calculated = set([first_center, ])
+    first_center_p = -first_center[0]  # SB heapq
+
+    potential_clone = []
+    for point in potential:
+        heapq.heappush(potential_clone, (cal_new_potential(point, first_center, X, beta), point[1]))
+    potential = potential_clone
 
     while True:
         most_potential, most_potential_i = heapq.heappop(potential)
 
         while True:
-            most_potential = -most_potential
-            if len(centers) == 0 or most_potential > epsilon_upper * centers[0][0]:
+            most_potential = -most_potential  # SB heapq again
+            if most_potential > epsilon_upper * first_center_p:
                 accepted = True
                 break
             elif most_potential < epsilon_lower * first_center_p:
@@ -65,7 +67,6 @@ def method_1994(X: tg.Dict[tg.Tuple, tg.List], Ra: float=2.0, Rb: float=3.0, eps
 
         if accepted:
             centers.append(most_potential)
-            calculated.add(most_potential[1])
             potential_clone = []
 
             for point in potential:
@@ -73,4 +74,6 @@ def method_1994(X: tg.Dict[tg.Tuple, tg.List], Ra: float=2.0, Rb: float=3.0, eps
             potential = potential_clone
         else:
             break
+
+    return tuple(*zip(*centers))
     # Question: what is the return value?
