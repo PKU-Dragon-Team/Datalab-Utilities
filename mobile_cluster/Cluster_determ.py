@@ -7,7 +7,7 @@ import typing as tg
 import heapq
 
 
-def method_1994(X: np.matrix, Ra: float=2.0, Rb: float=3.0, epsilon_upper: float=0.5, epsilon_lower: float=0.15) -> tg.Tuple[tg.List[int], tg.List[float]]:
+def method_1994(X: np.matrix, Ra: float=2.0, Rb: float=3.0, epsilon_upper: float=0.5, epsilon_lower: float=0.15) -> tg.Tuple[tg.List[float], tg.List[int]]:
     """funtion that use the 1994 Fuzzy Model Identification Based on Cluster Estimation method
         return the index of Cluster point in X and the potential of them
     """
@@ -20,7 +20,7 @@ def method_1994(X: np.matrix, Ra: float=2.0, Rb: float=3.0, epsilon_upper: float
     def cal_new_potential(old: tg.Tuple[np.double, int], center: tg.Tuple[np.double, int], X: np.matrix, beta: float=4.0 / 9) -> float:
         """Function calculate the updated potential of point x after a new cluster center occurs
         """
-        return old[0] - center[0] * np.exp(-beta * spatial.distance.sqeuclidean(X[old[1], :], X[center[1], :]))
+        return -old[0] + center[0] * np.exp(-beta * spatial.distance.sqeuclidean(X[old[1], :], X[center[1], :]))
 
     def cal_d_min(xi: int, centers: tg.List[tg.Tuple[np.double, int]], X: np.matrix) -> float:
         """Function calculate the shortest distance between point X[xi, :] and all previous cluster centers
@@ -45,7 +45,7 @@ def method_1994(X: np.matrix, Ra: float=2.0, Rb: float=3.0, epsilon_upper: float
 
     potential_clone = []
     for point in potential:
-        heapq.heappush(potential_clone, (cal_new_potential(point, first_center, X, beta), point[1]))
+        heapq.heappush(potential_clone, (-cal_new_potential(point, first_center, X, beta), point[1]))
     potential = potential_clone
 
     while len(potential) > 0:
