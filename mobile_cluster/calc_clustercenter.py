@@ -2,12 +2,10 @@
 """
 
 import numpy as np
+import sklearn.preprocessing as sklpp
 import pandas as pd
-import sklearn
-import sklearn.cluster
+import dask.array as da
 import pymysql
-import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
 
 import os
 import json
@@ -22,8 +20,6 @@ __location__ = os.path.join(os.getcwd(), os.path.dirname(os.path.realpath(__file
 __path__ = Path(__location__)
 
 sys.path.append(str(__path__.parent))
-
-import Voronoi
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -60,13 +56,14 @@ if __name__ == '__main__':
         dset[(row.x, row.y)] = json.loads(row.usr_count_json)
 
     dframe = pd.DataFrame.from_dict(dset, orient='index')
-    location = pd.DataFrame.from_records([row for row in dframe.index])
-    location.columns = ("x", "y")
+    # location = pd.DataFrame.from_records([row for row in dframe.index])
+    # location.columns = ("x", "y")
 
-    # p, cluster_centers = cd.method_1994(np.matrix(dframe))
-    p, cluster_centers = cd.method_1994(np.matrix(np.random.rand(400, 10)))
+    X = da.from_array(sklpp.minmax_scale(np.matrix(dframe, dtype=np.double), copy=False), (1000, 1000))
+
+    result = cd.method_1994(X)
 
     with open(os.path.join(__location__, 'cluster_centers.json'), 'w', encoding='utf_8') as f:
-        json.dump(cluster_centers, f, indent=4)
+        json.dump(result, f, indent=4)
 
     connection.close()
