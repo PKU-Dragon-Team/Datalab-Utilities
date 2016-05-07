@@ -1,14 +1,17 @@
 """the package for clustering mobile_data
 """
+import numpy as np
 import pandas as pd
-import sklearn
-import sklearn.cluster
+import sklearn.cluster as sklc
+import skfuzzy.cluster as skfc
+import sklearn.preprocessing as sklpp
 import pymysql
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 
 import os
 import json
+import math
 import decimal
 import typing as tg
 import sys
@@ -36,6 +39,12 @@ def gray2rgb(grayscale: float) -> tg.Tuple:
     return (grayscale, grayscale, grayscale)
 
 
+def fuzzifier_determ(D: int, N: int) -> float:
+    """The function to determ the fuzzifier paramter of fuzzy c-means
+    """
+    return 1 + (1418 / N + 22.05) * D**(-2) + (12.33 / N + 0.243) * D**(-0.0406 * math.log(N) - 0.1134)
+
+
 def main() -> None:
     with open(os.path.join(__location__, "config.json"), 'r') as config:
         conf = json.load(config)
@@ -59,25 +68,28 @@ def main() -> None:
     location = pd.DataFrame.from_records([row for row in dframe.index])
     location.columns = ("x", "y")
 
-    cluster_range = range(5, 11)
-    for i, c in enumerate(cluster_range, start=1):
-        ax = plt.subplot(4, 2, i)
-        kmeans = sklearn.cluster.MiniBatchKMeans(n_clusters=c)
-        result = kmeans.fit_predict(dframe)
-        color = (result + 1) / (c + 1)
-        rgb_color = [gray2rgb(x) for x in color]
-        handles = [mpatches.Patch(color=gray2rgb((i + 1) / (c + 1)), label='cluster %d' % (i + 1)) for i in range(c)]
-        if i % 2 != 0:
-            anchor = (-0.3, 0.5)
-            loc = 7
-        else:
-            anchor = (1.05, 0.5)
-            loc = 6
-        ax.legend(handles=handles, bbox_to_anchor=anchor, loc=loc, borderaxespad=0.0)
-        ax.set_autoscale_on(False)
-        ax.set_xlim(115.8, 116.9)
-        ax.set_ylim(39.6, 40.3)
-        Voronoi.voronoi(location, color_set=pd.DataFrame.from_records(rgb_color), target_axes=ax, show=False)
+    with open(os.path.join(__location__, "cluster_centers.json"), 'r') as f:
+        _, cluster_centers = json.load(f)
+
+    X = sklpp.maxabs_scale(np.matrix(dframe, dtype=np.double), copy=False)
+
+    centers = np.matrix(X[cluster_centers, :])
+    c = len(cluster_centers)
+    m = fuzzifier_determ(X.shape[1], X.shape[0])
+    ax = plt.subplot(1, 1, 1)
+    kmeans = sklc.MiniBatchKMeans(n_clusters=c, init=centers, max_iter=10000)
+    # fcmeans = skfc.cmeans(X, c, m, 1e-6, 10000, init=centers)
+    result = kmeans.fit_predict(dframe)
+
+    color = (result + 1) / (c + 1)
+    rgb_color = [gray2rgb(x) for x in color]
+    ax.set_autoscale_on(False)
+    ax.set_xlim(115.8, 116.9)
+    ax.set_ylim(39.6, 40.3)
+    Voronoi.voronoi(location, color_set=pd.DataFrame.from_records(rgb_color), target_axes=ax, show=False)
+
+    handles = [mpatches.Patch(color=gray2rgb((i + 1) / (c + 1)), label='cluster %d' % (i + 1)) for i in range(c)]
+    ax.legend(handles=handles, loc=0, borderaxespad=0.0)
     plt.show()
 
     connection.close()

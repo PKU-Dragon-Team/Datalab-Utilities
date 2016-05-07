@@ -4,56 +4,46 @@
 import numpy as np
 import dask.array as da
 import typing as tg
-import heapq
 
 
-def method_1994(X: da.core.Array, Ra: float=1, Rb: float=1.5, epsilon_upper: float=0.5, epsilon_lower: float=0.15) -> tg.Tuple[tg.List[float], tg.List[int]]:
+def method_1994(X: da.Array, Ra: float=1, Rb: float=1.5, epsilon_upper: float=0.5, epsilon_lower: float=0.15) -> tg.Tuple[tg.List[float], tg.List[int]]:
     """funtion that use the 1994 Fuzzy Model Identification Based on Cluster Estimation method
         return the index of Cluster point in X and the potential of them
     """
 
-    def cal_potential(xi: int, X: da.core.Array, alpha: float) -> float:
+    def cal_potential(xi: int, X: da.Array, alpha: float):
         """Function calculate the potential of point x become a cluster center
         """
-        # Here didn't exclude the xi row. The result is different but it dosn't affect the sequence.
-        return da.exp(-alpha * (X - X[xi, :])**2).sum().compute()
+        return da.exp(-alpha * (X[da.fromfunction(lambda x: x != xi, chunks=(1024, 1024), shape=(X.shape[0], ), dtype=bool), :] - X[xi, :])**2).sum()
 
-    def cal_new_potential(old: tg.Tuple[np.double, int], center: tg.Tuple[np.double, int], X: da.core.Array, beta: float) -> float:
+    def cal_new_potential(old_i: int, center_i: int, X: da.Array, p: da.Array, beta: float):
         """Function calculate the updated potential of point x after a new cluster center occurs
         """
-        return (-old[0] + center[0] * (-beta * da.linalg.lstsq(X[old[1], :], X[center[1], :]))**2).compute()
+        return (-p[old_i] + p[center_i] * (-beta * da.linalg.lstsq(X[old_i], X[center_i]))**2)
 
-    def cal_d_min(xi: int, centers: tg.List[tg.Tuple[np.double, int]], X: da.core.Array) -> float:
+    def cal_d_min(xi: int, centers: tg.List[tg.Tuple[np.double, int]], X: da.Array):
         """Function calculate the shortest distance between point X[xi, :] and all previous cluster centers
         """
-        distance = []  # heapq
-        for _, i in centers:
-            heapq.heappush(distance, da.linalg.lstsq(X[xi, :], X[i, :]).compute())
-
-        return distance[0]
+        return da.fromfunction(lambda i: da.linalg.lstsq(X[xi], X[i]), chunks=(1024, 1024), shape=(len(centers, )), dtype=np.double).min()
 
     alpha = 4 / Ra**2
     beta = 4 / Rb**2
 
-    potential = []  # heapq
     # calc the first center
-    for i, x in enumerate(X):
-        heapq.heappush(potential, (-cal_potential(i, X, alpha), i))  # heapq only provides min-heap, WTF
-    first_center = heapq.heappop(potential)
+    potential = da.fromfunction(lambda i: cal_potential(i, X, alpha), chunks=(1024, 1024), shape=(X.shape[0], ), dtype=np.double)
+    first_center_i = potential.argmax().compute()
+    first_center_p = potential[first_center_i]
+    centers = [(first_center_p, first_center_i), ]  # KDTree is not modifiable, so use plain method
+    calculated_count = 1
 
-    first_center_p = -first_center[0]  # SB heapq
-    centers = [(first_center_p, first_center[1])]  # KDTree is not modifiable, so use plain method
+    potential = da.fromfunction(lambda i: cal_new_potential(i, first_center_i, X, potential, beta), chunks=(1024, 1024), shape=potential.shape, dtype=np.double)
 
-    potential_clone = []
-    for point in potential:
-        heapq.heappush(potential_clone, (-cal_new_potential(point, first_center, X, beta), point[1]))
-    potential = potential_clone
-
-    while len(potential) > 0:
-        most_potential_p, most_potential_i = heapq.heappop(potential)
+    while len(potential) > calculated_count:
+        most_potential_i = potential.argmax()
+        most_potential_p = potential[most_potential_i]
+        calculated_count += 1
 
         while True:
-            most_potential_p = -most_potential_p  # SB heapq again
             if most_potential_p > epsilon_upper * first_center_p:
                 accepted = True
                 break
@@ -64,15 +54,14 @@ def method_1994(X: da.core.Array, Ra: float=1, Rb: float=1.5, epsilon_upper: flo
                 accepted = True
                 break
             else:
-                most_potential_p, most_potential_i = heapq.heappushpop(potential, (0, most_potential_i))
+                potential = da.fromfunction(lambda i: 0 if i == most_potential_i else potential[i], chunks=(1024, 1024), shape=potential.shape, dtype=np.double)  # da.Array is immutable
+                most_potential_i = potential.argmax()
+                most_potential_p = potential[most_potential_i]
+                calculated_count += 1
 
         if accepted:
             centers.append((most_potential_p, most_potential_i))
-            potential_clone = []
-
-            for point in potential:
-                heapq.heappush(potential_clone, (cal_new_potential(point, (most_potential_p, most_potential_i), X, beta), point[1]))
-            potential = potential_clone
+            potential = da.fromfunction(lambda i: cal_new_potential(i, first_center_i, X, potential, beta), chunks=(1024, 1024), shape=potential.shape, dtype=np.double)
         else:
             break
     return tuple(zip(*centers))
