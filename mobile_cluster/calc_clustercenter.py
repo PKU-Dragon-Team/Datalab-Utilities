@@ -37,21 +37,18 @@ if __name__ == '__main__':
     for i in range(len(data)):
         row = data.iloc[i]
         dset[(row.x, row.y)] = json.loads(row.usr_count_json)
-
     dframe = pd.DataFrame.from_dict(dset, orient='index')
-    # location = pd.DataFrame.from_records([row for row in dframe.index])
-    # location.columns = ("x", "y")
     print("Data structure builded.")
 
     print("Preprocessing data…")
-    X = sklpp.minmax_scale(np.matrix(dframe, dtype=np.double), copy=False)
+    X = sklpp.maxabs_scale(np.matrix(dframe, dtype=np.double), copy=False)
     print("Data preprocessed.")
 
     print("Calculating cluster centers…")
     t0 = time.time()
-    result = cd.method_1994(X)
+    result = cd.method_1994(X, sample=1000)
     t1 = time.time()
-    print("Cluster centers alculated.")
+    print("Cluster centers calculated.")
     print("Total time: %.2f" % (t1 - t0))
 
     print("Dumping result…")
