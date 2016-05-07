@@ -7,32 +7,40 @@ import typing as tg
 import math
 
 
-def method_1994(X: np.matrix, Ra: float=0.5, Rb: float=0.75, epsilon_upper: float=0.5, epsilon_lower: float=0.15):
+def method_1994(X: np.matrix, Ra: float=0.25, Rb: float=0.25 * 1.5, epsilon_upper: float=0.5, epsilon_lower: float=0.15, sample: int=None):
     """funtion that use the 1994 Fuzzy Model Identification Based on Cluster Estimation method
         return the index of Cluster point in X and the potential of them
     """
+
     def cal_potential(xi: int, X: np.matrix, alpha: float):
         """Function calculate the potential of point x become a cluster center
         """
-        return np.exp(-alpha * ((X[np.fromfunction(lambda i: i != xi, shape=(X.shape[0], )), :] - X[xi, :])**2).sum(axis=1)).sum()
-    def cal_new_potential(old_i: int, center: tg.Tuple[np.double, int], X: np.matrix, p: np.ndarray, beta: float):
+        return np.exp(-alpha * (((X - X[xi, :])**2).sum(axis=1))).sum()
+
+    def cal_new_potential(old_i: int, center: tg.Tuple[float, int], X: np.matrix, p: np.ndarray, beta: float):
         """Function calculate the updated potential of point x after a new cluster center occurs
         """
-        return p[old_i] - center[0] * np.exp(-beta * ((X[old_i, :] - X[center[1], :])**2).sum())
-    def cal_d_min(xi: int, centers: tg.List[tg.Tuple[np.double, int]], X: np.matrix):
+        return p[old_i] - center[0] * np.exp(-beta * (((X[old_i, :] - X[center[1], :])**2).sum()))
+
+    def cal_d_min(xi: int, centers: tg.List[tg.Tuple[float, int]], X: np.matrix):
         """Function calculate the shortest distance between point X[xi, :] and all previous cluster centers
         """
         return math.sqrt(((X[tuple(zip(*centers))[1], :] - X[xi, :])**2).sum(axis=1).min())
-    alpha = 4 / Ra**2
-    beta = 4 / Rb**2
-    # calc the first center
-    potential = np.fromiter((cal_potential(i, X, alpha) for i in range(X.shape[0])), dtype=np.double)
+
+    alpha = 4 / (Ra**2)
+    beta = 4 / (Rb**2)
+    if sample:
+        sample_mask = np.random.choice(X.shape[0], size=sample, replace=False)
+        X = X[sample_mask]
+
+# calc the first center
+    potential = np.fromiter((cal_potential(i, X, alpha) for i in range(X.shape[0])), dtype=float)
     first_center_i = potential.argmax()
     first_center_p = potential[first_center_i]
-    centers = [(first_center_p, first_center_i), ]  # KDTree is not modifiable, so use plain method
+    centers = [(float(first_center_p), int(first_center_i)), ]  # KDTree is not modifiable, so use plain method
     calculated_count = 1
     print("Center %d detected." % len(centers))
-    potential = np.fromiter((cal_new_potential(i, (first_center_p, first_center_i), X, potential, beta) for i in range(X.shape[0])), dtype=np.double)
+    potential = np.fromiter((cal_new_potential(i, (first_center_p, first_center_i), X, potential, beta) for i in range(X.shape[0])), dtype=float)
     while len(potential) > calculated_count:
         most_potential_i = potential.argmax()
         most_potential_p = potential[most_potential_i]
@@ -53,9 +61,13 @@ def method_1994(X: np.matrix, Ra: float=0.5, Rb: float=0.75, epsilon_upper: floa
                 most_potential_p = potential[most_potential_i]
                 calculated_count += 1
         if accepted:
-            centers.append((most_potential_p, most_potential_i))
-            potential = np.fromiter((cal_new_potential(i, (most_potential_p, most_potential_i), X, potential, beta) for i in range(X.shape[0])), dtype=np.double)
+            centers.append((float(most_potential_p), int(most_potential_i)))
+            potential = np.fromiter((cal_new_potential(i, (most_potential_p, most_potential_i), X, potential, beta) for i in range(X.shape[0])), dtype=float)
             print("Center %d detected." % len(centers))
         else:
             break
-    return tuple(zip(*centers))
+
+    if sample:
+        return tuple(zip(*((p, int(sample_mask[i])) for p, i in centers)))
+    else:
+        return tuple(zip(*centers))
