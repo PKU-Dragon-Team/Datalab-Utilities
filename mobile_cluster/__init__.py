@@ -15,6 +15,8 @@ import math
 import decimal
 import typing as tg
 import sys
+import time
+import numbers
 from pathlib import Path
 
 __location__ = os.path.join(os.getcwd(), os.path.dirname(os.path.realpath(__file__)))
@@ -25,11 +27,19 @@ sys.path.append(str(__path__.parent))
 import Voronoi
 
 
-class DecimalEncoder(json.JSONEncoder):
+class NumpyAndPandasEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, decimal.Decimal):
-            return str(obj)
-        return json.JSONEncoder.default(self, obj)
+        if isinstance(obj, (np.ndarray, np.matrix)):
+            return [self.default(x) for x in obj]
+        if isinstance(obj, pd.DataFrame):
+            return [self.default(series) for _, series in obj.iterrows()]
+        if isinstance(obj, pd.Series):
+            return [self.default(val) for _, val in obj.iteritems()]
+        if isinstance(obj, numbers.Integral):
+            return int(obj)
+        if isinstance(obj, (numbers.Real, numbers.Rational)):
+            return float(obj)
+        return super().default(obj)
 
 
 def gray2rgb(grayscale: float) -> tg.Tuple:
@@ -56,9 +66,12 @@ def main() -> None:
 
     connection = pymysql.connect(host=HOST, user=USER, password=PASS, db=DATABASE, charset=CHARSET, cursorclass=pymysql.cursors.DictCursor)
 
+    print("Loding data from SQL…")
     sql = "SELECT usr_count_json, x, y FROM `loc_week_count_reshape`"
     data = pd.read_sql(sql, connection)
+    print("Data loded.")
 
+    print("Building data structure…")
     dset = {}
     for i in range(len(data)):
         row = data.iloc[i]
@@ -67,29 +80,50 @@ def main() -> None:
     dframe = pd.DataFrame.from_dict(dset, orient='index')
     location = pd.DataFrame.from_records([row for row in dframe.index])
     location.columns = ("x", "y")
+    print("Data structure builded.")
 
-    with open(os.path.join(__location__, "cluster_centers.json"), 'r') as f:
-        _, cluster_centers = json.load(f)
+    # with open(os.path.join(__location__, "cluster_centers.json"), 'r') as f:
+    #     _, cluster_centers = json.load(f)
 
+    print("Preprocessing data…")
     X = sklpp.maxabs_scale(np.matrix(dframe, dtype=np.double), copy=False)
+    sample_mask = np.random.choice(X.shape[0], size=1000, replace=False)
+    X_sample = X[sample_mask, :]
+    print("Data preprocessed.")
 
-    centers = np.matrix(X[cluster_centers, :])
-    c = len(cluster_centers)
-    m = fuzzifier_determ(X.shape[1], X.shape[0])
-    ax = plt.subplot(1, 1, 1)
-    kmeans = sklc.MiniBatchKMeans(n_clusters=c, init=centers, max_iter=10000)
+    # centers = np.matrix(X[cluster_centers, :])
+    # c = len(cluster_centers)
+    # m = fuzzifier_determ(X.shape[1], X.shape[0])
+    # kmeans = sklc.MiniBatchKMeans(n_clusters=c, init=centers, max_iter=1e8)
     # fcmeans = skfc.cmeans(X, c, m, 1e-6, 10000, init=centers)
-    result = kmeans.fit_predict(dframe)
+    # result = kmeans.fit_predict(dframe)
+    print("Model fitting and sample predicting…")
+    t0 = time.time()
+    ap = sklc.AffinityPropagation().fit(X_sample)
+    # result = ap.predict(X)
+    cluster_centers = ap.cluster_centers_indices_
+    c = len(cluster_centers)
+    t1 = time.time()
+    print("Model fitted and sample predicted.")
+    print("%d cluster centers dectected." % c)
+    print("Total time: %.2f" % (t1 - t0))
 
-    color = (result + 1) / (c + 1)
-    rgb_color = [gray2rgb(x) for x in color]
-    ax.set_autoscale_on(False)
-    ax.set_xlim(115.8, 116.9)
-    ax.set_ylim(39.6, 40.3)
-    Voronoi.voronoi(location, color_set=pd.DataFrame.from_records(rgb_color), target_axes=ax, show=False)
+    # print("Plotting result…")
+    # color = (result + 1) / (c + 1)
+    # rgb_color = [gray2rgb(x) for x in color]
+    # ax = plt.subplot(1, 1, 1)
+    # ax.set_autoscale_on(False)
+    # ax.set_xlim(115.8, 116.9)
+    # ax.set_ylim(39.6, 40.3)
+    # Voronoi.voronoi(location, color_set=pd.DataFrame.from_records(rgb_color), target_axes=ax, show=False)
+    # plt.show()
+    # handles = [mpatches.Patch(color=gray2rgb((i + 1) / (c + 1)), label='cluster %d' % (i + 1)) for i in range(c)]
+    # ax.legend(handles=handles, loc=0, borderaxespad=0.0)
+    # print("Result plotted.")
 
-    handles = [mpatches.Patch(color=gray2rgb((i + 1) / (c + 1)), label='cluster %d' % (i + 1)) for i in range(c)]
-    ax.legend(handles=handles, loc=0, borderaxespad=0.0)
-    plt.show()
+    print("Dumping result…")
+    with open(os.path.join(__location__, 'cluster_centers.json'), 'w', encoding='utf_8') as f:
+        json.dump(dframe.iloc[sample_mask[cluster_centers], :], f, cls=NumpyAndPandasEncoder)
+    print("Result dumped.")
 
     connection.close()
