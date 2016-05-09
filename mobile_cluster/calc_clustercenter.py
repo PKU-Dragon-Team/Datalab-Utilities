@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     print("Calculating cluster centers…")
     t0 = time.time()
-    result = cd.method_1994(X, sample=1000)
+    result = cd.method_1994(X)
     t1 = time.time()
     print("Cluster centers calculated.")
     print("Total time: %.2f" % (t1 - t0))
