@@ -7,7 +7,7 @@ import typing as tg
 import math
 
 
-def method_1994(X: np.matrix, Ra: float=0.25, Rb: float=0.25 * 1.5, epsilon_upper: float=0.5, epsilon_lower: float=0.15, sample: int=None):
+def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5, epsilon_lower: float=0.15):
     """funtion that use the 1994 Fuzzy Model Identification Based on Cluster Estimation method
         return the index of Cluster point in X and the potential of them
     """
@@ -29,11 +29,8 @@ def method_1994(X: np.matrix, Ra: float=0.25, Rb: float=0.25 * 1.5, epsilon_uppe
 
     alpha = 4 / (Ra**2)
     beta = 4 / (Rb**2)
-    if sample:
-        sample_mask = np.random.choice(X.shape[0], size=sample, replace=False)
-        X = X[sample_mask]
 
-# calc the first center
+    # calc the first center
     potential = np.fromiter((cal_potential(i, X, alpha) for i in range(X.shape[0])), dtype=float)
     first_center_i = potential.argmax()
     first_center_p = potential[first_center_i]
@@ -66,8 +63,4 @@ def method_1994(X: np.matrix, Ra: float=0.25, Rb: float=0.25 * 1.5, epsilon_uppe
             print("Center %d detected." % len(centers))
         else:
             break
-
-    if sample:
-        return tuple(zip(*((p, int(sample_mask[i])) for p, i in centers)))
-    else:
-        return tuple(zip(*centers))
+    return tuple(zip(*centers))
