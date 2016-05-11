@@ -6,13 +6,11 @@ import sklearn.cluster as sklc
 import skfuzzy.cluster as skfc
 import sklearn.preprocessing as sklpp
 import pymysql
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 
 import os
 import json
 import math
-import decimal
 import typing as tg
 import sys
 import time
