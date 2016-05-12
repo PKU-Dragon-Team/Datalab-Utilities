@@ -22,13 +22,13 @@ if __name__ == "__main__":
 
     connection = pymysql.connect(host=HOST, user=USER, password=PASS, db=DATABASE, charset=CHARSET, cursorclass=pymysql.cursors.DictCursor)
 
-    sql = "SELECT usr_count_json, x, y FROM `loc_week_count_reshape`"
+    sql = "SELECT usr_count_normalize, x, y FROM `loc_week_count_reshape`"
     data = pd.read_sql(sql, connection)
 
     dset = {}
     for i in range(len(data)):
         row = data.iloc[i]
-        dset[(row.x, row.y)] = json.loads(row.usr_count_json)
+        dset[(row.x, row.y)] = json.loads(row.usr_count_normalize)
 
     dframe = pd.DataFrame.from_dict(dset, orient='index')
     location = pd.DataFrame.from_records([row for row in dframe.index])
