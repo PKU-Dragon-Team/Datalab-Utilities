@@ -1,23 +1,23 @@
 """Module to compute and show Voronoi figure
 """
 import os
+import typing as tg
 
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-from scipy.spatial import Voronoi
+import numpy as np
 import pandas as pd
+from scipy.spatial import Voronoi
 
 __location__ = os.path.join(os.getcwd(), os.path.dirname(os.path.realpath(__file__)))
 
-COUNT_LIMIT = None
 
-
-def voronoi(cell_info: pd.DataFrame, show: bool=True, color_set: pd.DataFrame=None, target_axes: matplotlib.axes.Axes=None) -> None:
+def voronoi(cell_info: pd.DataFrame, color_set: tg.Sequence=None, target_axes: matplotlib.axes.Axes=None) -> None:
     """the function to compute and show voronoi figure
+    cell_info is supposed to have column x and column y which contains the position of each point
     """
-    cells = np.array(cell_info[["x", "y"]])
-    color = np.array(color_set)
+    cells = np.asarray(cell_info[["x", "y"]])
+    color = np.asarray(color_set)
 
     # compute Voronoi tesselation
     vor = Voronoi(cells)
@@ -36,11 +36,3 @@ def voronoi(cell_info: pd.DataFrame, show: bool=True, color_set: pd.DataFrame=No
             polygon = [vor.vertices[j] for j in region]
             z = list(zip(*polygon))
             ax.fill(z[0], z[1], color=color[i])
-    if show:
-        plt.show()
-
-
-if __name__ == '__main__':
-    cell_info = pd.read_csv(os.path.join(__location__, 'cell_info.csv'), header=None, dtype={0: str, 1: float, 2: float}, nrows=COUNT_LIMIT)
-    cell_info.columns = ("name", "x", "y")
-    voronoi(cell_info)

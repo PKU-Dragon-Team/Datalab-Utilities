@@ -82,11 +82,6 @@ def main() -> None:
 
     print("Preprocessing data…")
     X = sklpp.maxabs_scale(np.asfarray(dframe['usr_count_normalize'].values.tolist()), copy=False)  # type: np.ndarray
-    # sample_mask = np.random.choice(X.shape[0], size=1000, replace=False)
-    with open(os.path.join(__location__, "middle_dump.json"), "r") as f:
-        middle_dump = json.load(f)  # type: tg.Dict["mask", "centers"]
-        sample_mask = np.array(middle_dump["mask"])
-    # X_sample = X[sample_mask, :]
     print("Data preprocessed.")
 
     print("Birch model fitting…")
@@ -104,14 +99,14 @@ def main() -> None:
 
     # dump middle result
     with open(os.path.join(__location__, "middle_dump.json"), 'w') as f:
-        json.dump({'mask': sample_mask, 'centers': cluster_centers}, f, cls=NumpyAndPandasEncoder)
+        json.dump({'centers': cluster_centers}, f, cls=NumpyAndPandasEncoder)
 
     m = fuzzifier_determ(X.shape[1], X.shape[0])
 
     # use Fuzzy c-means predict to build the initial_matrix
     # cmeans accept (D, N) rather than (N, D)
     # pdb.set_trace()
-    u, u0, d, jm, p, fpc = skfc.cmeans_predict(X.T, cluster_centers, m, 1e-3, 2)  # in the function will rotate X WTF
+    u, u0, d, jm, p, fpc = skfc.cmeans_predict(X.T, cluster_centers, m, 1e-3, 2)  # the function will rotate X WTF
 
     print("Fuzzy c-means model fitting…")
     t2 = time.time()
@@ -128,7 +123,7 @@ def main() -> None:
     ax.set_autoscale_on(False)
     ax.set_xlim(115.8, 116.9)
     ax.set_ylim(39.6, 40.3)
-    Voronoi.voronoi(location, color_set=pd.DataFrame.from_records(rgb_color), target_axes=ax, show=False)
+    Voronoi.voronoi(location, color_set=rgb_color, target_axes=ax, show=False)
     print("Result plotted.")
     plt.show()
     # handles = [mpatches.Patch(color=gray2rgb((i + 1) / (c + 1)), label='cluster %d' % (i + 1)) for i in range(c)]
