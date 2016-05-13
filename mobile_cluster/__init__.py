@@ -4,11 +4,8 @@ import json
 import math
 import numbers
 import os
-import sys
 import time
 import typing as tg
-from pathlib import Path
-import pdb
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,12 +15,9 @@ import skfuzzy.cluster as skfc
 import sklearn.cluster as sklc
 import sklearn.preprocessing as sklpp
 
+from ..Voronoi import voronoi
+
 __location__ = os.path.join(os.getcwd(), os.path.dirname(os.path.realpath(__file__)))
-__path__ = Path(__location__)
-
-sys.path.append(str(__path__.parent))
-
-import Voronoi
 
 
 class NumpyAndPandasEncoder(json.JSONEncoder):
@@ -123,7 +117,7 @@ def main() -> None:
     ax.set_autoscale_on(False)
     ax.set_xlim(115.8, 116.9)
     ax.set_ylim(39.6, 40.3)
-    Voronoi.voronoi(location, color_set=rgb_color, target_axes=ax, show=False)
+    voronoi(location, color_set=rgb_color, target_axes=ax, show=False)
     print("Result plotted.")
     plt.show()
     # handles = [mpatches.Patch(color=gray2rgb((i + 1) / (c + 1)), label='cluster %d' % (i + 1)) for i in range(c)]
