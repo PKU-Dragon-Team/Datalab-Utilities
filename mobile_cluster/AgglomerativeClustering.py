@@ -63,7 +63,11 @@ class AgglomerativeClustering(sklc.AgglomerativeClustering):
         if self.linkage != 'ward':
             kwargs['linkage'] = self.linkage
             kwargs['affinity'] = self.affinity
-        self.children_, self.n_components_, self.n_leaves_, parents = memory.cache(tree_builder)(X, connectivity, n_components=self.n_components, n_clusters=n_clusters, **kwargs)
+        
+        if return_distance:
+            self.children_, self.n_components_, self.n_leaves_, parents, self.distance_ = memory.cache(tree_builder)(X, connectivity, n_components=self.n_components, n_clusters=n_clusters, **kwargs)
+        else:
+            self.children_, self.n_components_, self.n_leaves_, parents = memory.cache(tree_builder)(X, connectivity, n_components=self.n_components, n_clusters=n_clusters, **kwargs)
         # Cut the tree
         if compute_full_tree:
             self.labels_ = _hc_cut(self.n_clusters, self.children_, self.n_leaves_)
