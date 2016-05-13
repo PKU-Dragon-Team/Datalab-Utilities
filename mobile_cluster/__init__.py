@@ -117,7 +117,7 @@ def main() -> None:
     ax.set_autoscale_on(False)
     ax.set_xlim(115.8, 116.9)
     ax.set_ylim(39.6, 40.3)
-    voronoi(location, color_set=rgb_color, target_axes=ax, show=False)
+    voronoi(location, color_set=rgb_color, target_axes=ax)
     print("Result plotted.")
     plt.show()
     # handles = [mpatches.Patch(color=gray2rgb((i + 1) / (c + 1)), label='cluster %d' % (i + 1)) for i in range(c)]
