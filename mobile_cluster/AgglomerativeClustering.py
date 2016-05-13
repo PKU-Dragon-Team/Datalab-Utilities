@@ -10,10 +10,13 @@ from sklearn.utils import check_array
 
 
 class AgglomerativeClustering(sklc.AgglomerativeClustering):
+    """Rewrite fit function to pass parameters and get distance
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def fit(self, X: np.ndarray, y: np.ndarray=None, *args, **kwargs) -> tg.Optional:
+    def fit(self, X: np.ndarray, y: np.ndarray=None, return_distance: bool=False) -> tg.Optional:
         """Fit the hierarchical clustering on the data Parameter
         ----------
         X : array-like, shape = [n_samples, n_features] The samples a.k.a. observations.
@@ -56,10 +59,11 @@ class AgglomerativeClustering(sklc.AgglomerativeClustering):
         if compute_full_tree:
             n_clusters = None
         # Construct the tree
+        kwargs = {return_distance: return_distance}
         if self.linkage != 'ward':
             kwargs['linkage'] = self.linkage
             kwargs['affinity'] = self.affinity
-        self.children_, self.n_components_, self.n_leaves_, parents = memory.cache(tree_builder)(X, connectivity, n_components=self.n_components, n_clusters=n_clusters, **kwargs)  # return_distance=False
+        self.children_, self.n_components_, self.n_leaves_, parents = memory.cache(tree_builder)(X, connectivity, n_components=self.n_components, n_clusters=n_clusters, **kwargs)
         # Cut the tree
         if compute_full_tree:
             self.labels_ = _hc_cut(self.n_clusters, self.children_, self.n_leaves_)
