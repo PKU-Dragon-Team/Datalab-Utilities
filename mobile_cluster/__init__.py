@@ -74,7 +74,7 @@ def main() -> None:
     dframe = dframe.assign(location=lambda X: list(zip(X.x, X.y)))
     dframe['usr_count_normalize'] = dframe['usr_count_normalize'].map(lambda row: json.loads(row))
     dframe.sort_values("location")
-    location = dframe.location
+    location = dframe[['x', 'y']]
     print("Data structure builded.")
 
     # with open(os.path.join(__location__, "cluster_centers.json"), 'r') as f:
@@ -94,8 +94,8 @@ def main() -> None:
     birch = sklc.Birch(threshold=0.28)
     birch.fit(X)
     cluster_centers = birch.subcluster_centers_
-    cluster_labels = birch.subcluster_labels_
-    labels = birch.labels_
+    # cluster_labels = birch.subcluster_labels_
+    # labels = birch.labels_
     c = len(cluster_centers)
     t1 = time.time()
     print("Birch model fitted.")
@@ -111,7 +111,7 @@ def main() -> None:
     # use Fuzzy c-means predict to build the initial_matrix
     # cmeans accept (D, N) rather than (N, D)
     # pdb.set_trace()
-    u, u0, d, jm, p, fpc = skfc.cmeans_predict(X.T, cluster_centers, m, 1e-3, 100)  # in the function will rotate X WTF
+    u, u0, d, jm, p, fpc = skfc.cmeans_predict(X.T, cluster_centers, m, 1e-3, 2)  # in the function will rotate X WTF
 
     print("Fuzzy c-means model fitting…")
     t2 = time.time()
@@ -128,7 +128,7 @@ def main() -> None:
     ax.set_autoscale_on(False)
     ax.set_xlim(115.8, 116.9)
     ax.set_ylim(39.6, 40.3)
-    Voronoi.voronoi(location, color_set=pd.DataFrame.from_records(rgb_color), target_axes=ax, sample_limit=0, show=False)
+    Voronoi.voronoi(location, color_set=pd.DataFrame.from_records(rgb_color), target_axes=ax, show=False)
     print("Result plotted.")
     plt.show()
     # handles = [mpatches.Patch(color=gray2rgb((i + 1) / (c + 1)), label='cluster %d' % (i + 1)) for i in range(c)]
