@@ -4,8 +4,6 @@ import scipy.spatial.distance as spsd
 import scipy.signal as spsn
 import heapq as hq
 
-import pdb
-
 
 def SimpleHierachicalCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None) -> np.ndarray:
     """My version of Hierachical Clustering, processing small amount of samples and give easily judgement of the hierachical tree
@@ -57,6 +55,8 @@ def SimpleHierachicalCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None
 
 
 def LastLocalMinimumCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None) -> tg.Tuple[np.ndarray, np.ndarray]:
+    """Hierachical Cluster that pick the last local minimum of distance and cut the cluster tree into several clusters
+    """
     n_samples, n_features = X.shape
     hierachical, distances, nodes, weights = SimpleHierachicalCluster(X, weight)
     # find local minimums
@@ -66,9 +66,29 @@ def LastLocalMinimumCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None)
     except IndexError:  # no local_minimum, return all clustered nodes
         return nodes[n_samples:], weights[n_samples]
 
-    merged_nodes = set(hierachical[:last_local_minimum, 0:2].flat)
+    merged_nodes = set(hierachical[:last_local_minimum + 1, 0:2].flat)
     post_cluster_nodes = set(hierachical[last_local_minimum + 1:, 2].flat)
     total_nodes = set(range(len(nodes)))
     cluster_centers = total_nodes - post_cluster_nodes - merged_nodes  # nodes that is not merged will be cluster_centers
-    pdb.set_trace()
+    return nodes[list(cluster_centers)], weights[list(cluster_centers)]
+
+
+def PercentageCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None, percentage: float=0.5) -> tg.Tuple[np.ndarray, np.ndarray]:
+    """Hierachical Cluster that cut the cluster tree into several clusters when distance is higher than the require percentage
+    """
+    n_samples, n_features = X.shape
+    hierachical, distances, nodes, weights = SimpleHierachicalCluster(X, weight)
+    # find cutting point
+    max_d = np.max(distances)
+    extrema = distances < percentage * max_d  # type: np.ndarray
+    for i, x in enumerate(np.flipud(extrema)):
+        if x:
+            break
+
+    last_less = len(extrema) - 1 - i
+
+    merged_nodes = set(hierachical[:last_less + 1, 0:2].flat)
+    post_cluster_nodes = set(hierachical[last_less + 1:, 2].flat)
+    total_nodes = set(range(len(nodes)))
+    cluster_centers = total_nodes - post_cluster_nodes - merged_nodes  # nodes that is not merged will be cluster_centers
     return nodes[list(cluster_centers)], weights[list(cluster_centers)]
