@@ -1,7 +1,7 @@
 import numpy as np
 import typing as tg
 import enum as em
-import scipy.spatial.distances as spsd
+import scipy.spatial.distance as spsd
 import heapq as hq
 
 # import sklearn.cluster as sklc
