@@ -4,6 +4,7 @@ import scipy.spatial.distance as spsd
 import scipy.signal as spsn
 import heapq as hq
 
+import pdb
 
 def SimpleHierachicalCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None) -> np.ndarray:
     """My version of Hierachical Clustering, processing small amount of samples and give easily judgement of the hierachical tree
@@ -57,12 +58,12 @@ def SimpleHierachicalCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None
 def LastLocalMinimumCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None) -> tg.Tuple[np.ndarray, np.ndarray]:
     n_samples, n_features = X.shape
     hierachical, distances, nodes, weights = SimpleHierachicalCluster(X, weight)
-    # find local mimimums
+    # find local minimums
     extrema = spsn.argrelmin(distances)  # type: np.ndarray
     last_local_minimum = extrema[0][len(extrema[0]) - 1]
 
     merged_nodes = set(hierachical[:last_local_minimum, 0:2].flat)
     cluster_nodes = set(range(len(nodes)))
     cluster_centers = cluster_nodes - merged_nodes  # nodes that is not merged will be cluster_centers
-
+    pdb.set_trace()
     return nodes[list(cluster_centers)], weights[list(cluster_centers)]
