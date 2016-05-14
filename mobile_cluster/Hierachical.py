@@ -80,7 +80,7 @@ def PercentageCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None, perce
     hierachical, distances, nodes, weights = SimpleHierachicalCluster(X, weight)
     # find cutting point
     max_d = np.max(distances)
-    extrema = distances < percentage * max_d  # type: np.ndarray
+    extrema = distances < percentage * max_d
     for i, x in enumerate(np.flipud(extrema)):
         if x:
             break
