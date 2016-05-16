@@ -12,8 +12,6 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import Voronoi
 
-import pdb
-
 __location__ = os.path.join(os.getcwd(), os.path.dirname(os.path.realpath(__file__)))
 
 
@@ -54,7 +52,6 @@ def voronoi_dump(cell_info: pd.DataFrame, out_file=tg.TextIO, label: tg.Optional
 
     clusters = np.unique(labels)
 
-    pdb.set_trace()
     output = {}
     for x in clusters:
         output[int(x)] = []
