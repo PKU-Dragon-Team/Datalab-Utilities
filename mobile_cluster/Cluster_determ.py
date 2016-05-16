@@ -76,7 +76,7 @@ def autoBirch(X: np.ndarray, start_threshold: float=0.5, target_range: tg.Tuple[
     labels = birch.fit_predict(X)
     sc = np.unique(labels).size
 
-    while sc not in range(target_range):
+    while sc not in range(*target_range):
         if sc < target_range[0]:
             new_t = (prev_t + t) / 2
             prev_t = t
