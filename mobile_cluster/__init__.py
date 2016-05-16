@@ -1,8 +1,6 @@
 """the package for clustering mobile_data
 """
-import json
 import math
-import numbers
 import typing as tg
 
 import numpy as np

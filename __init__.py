@@ -1,3 +1,9 @@
+import json
+import numpy as np
+import pandas as pd
+import numbers
+
+
 class NumpyAndPandasEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (np.ndarray, np.matrix)):
