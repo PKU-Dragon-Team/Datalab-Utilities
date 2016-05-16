@@ -1,8 +1,10 @@
 import numpy as np
 import typing as tg
+import sklearn.cluster as sklc
 import scipy.spatial.distance as spsd
 import scipy.signal as spsn
 import heapq as hq
+import matplotlib.pyplot as plt
 
 
 def SimpleHierachicalCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None) -> np.ndarray:
@@ -92,3 +94,29 @@ def PercentageCluster(X: np.ndarray, weight: tg.Optional[np.ndarray]=None, perce
     total_nodes = set(range(len(nodes)))
     cluster_centers = total_nodes - post_cluster_nodes - merged_nodes  # nodes that is not merged will be cluster_centers
     return nodes[list(cluster_centers)], weights[list(cluster_centers)]
+
+
+def MeanLogWardTree(X: np.ndarray, weight: tg.Optional[np.ndarray]=None) -> np.ndarray:
+    """Hierachical Cluster that pick the mean of log of ward_tree distance and cut the cluster tree into several clusters
+    """
+    if weight is None:
+        connect = None
+    else:
+        connect = np.outer(weight, weight)
+    n_samples, n_features = X.shape
+    children, n_components, n_leaves, parents, distances = sklc.ward_tree(X, connectivity=connect, return_distance=True)
+    c = children.shape[0]
+    hierachical = np.hstack([children, np.arange(n_samples, n_samples + c).reshape(c, 1)])
+    log_distance = np.log(np.sqrt(distances**2 / n_features))
+    mean_log_distance = np.mean(log_distance)
+    distance_mask = log_distance < mean_log_distance
+    post_distance_mask = log_distance >= mean_log_distance
+
+    merged_nodes = set(hierachical[distance_mask, 0:2].flat)
+    post_cluster_nodes = set(hierachical[post_distance_mask, 2].flat)
+    total_nodes = set(range(n_samples, c + n_samples))
+    cluster_centers = total_nodes - post_cluster_nodes - merged_nodes  # nodes that is not merged will be cluster_centers
+    print(merged_nodes)
+    print(post_cluster_nodes)
+    print(total_nodes)
+    return hierachical[np.asarray(list(cluster_centers)) - n_samples]
