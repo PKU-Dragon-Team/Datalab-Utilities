@@ -67,7 +67,7 @@ def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5
     return tuple(zip(*centers))
 
 
-def autoBirch(X: np.ndarray, start_threshold: float=0.5, target_range: tg.Tuple[int, int]=(3, 100)) -> tg.Tuple[sklc.Birch, float]:
+def autoBirch(X: np.ndarray, start_threshold: float=0.5, target_range: tg.Tuple[int, int]=(3, 100)) -> tg.Tuple[sklc.Birch, np.ndarray, float]:
     """Method that use dihotomy to automatically select threshold to fit n_cluster into target_range
     """
     prev_t = 0.0
@@ -94,4 +94,4 @@ def autoBirch(X: np.ndarray, start_threshold: float=0.5, target_range: tg.Tuple[
         else:
             break
 
-    return birch, t
+    return birch, labels, t
