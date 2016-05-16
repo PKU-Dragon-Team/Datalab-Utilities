@@ -2,6 +2,7 @@
 """
 
 import numpy as np
+import sklearn.cluster as sklc
 import typing as tg
 
 import math
@@ -64,3 +65,33 @@ def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5
         else:
             break
     return tuple(zip(*centers))
+
+
+def autoBirch(X: np.ndarray, start_threshold: float=0.5, target_range: tg.Tuple[int, int]=(3, 100)) -> tg.Tuple[sklc.Birch, float]:
+    """Method that use dihotomy to automatically select threshold to fit n_cluster into target_range
+    """
+    prev_t = 0.0
+    t = start_threshold
+    birch = sklc.Birch(threshold=t, n_clusters=None)
+    labels = birch.fit_predict(X)
+    sc = np.unique(labels).size
+
+    while sc not in range(target_range):
+        if sc < target_range[0]:
+            new_t = (prev_t + t) / 2
+            prev_t = t
+            t = new_t
+            birch = sklc.Birch(threshold=t, n_clusters=None)
+            labels = birch.fit_predict(X)
+            sc = np.unique(labels).size
+        elif sc > target_range[1]:
+            new_t = t * 2
+            prev_t = t
+            t = new_t
+            birch = sklc.Birch(threshold=t, n_clusters=None)
+            labels = birch.fit_predict(X)
+            sc = np.unique(labels).size
+        else:
+            break
+
+    return birch, t
