@@ -10,21 +10,6 @@ import pandas as pd
 import pymysql
 
 
-class NumpyAndPandasEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, (np.ndarray, np.matrix)):
-            return [self.default(x) for x in obj]
-        if isinstance(obj, pd.DataFrame):
-            return [self.default(series) for _, series in obj.iterrows()]
-        if isinstance(obj, pd.Series):
-            return [self.default(val) for _, val in obj.iteritems()]
-        if isinstance(obj, numbers.Integral):
-            return int(obj)
-        if isinstance(obj, (numbers.Real, numbers.Rational)):
-            return float(obj)
-        return super().default(obj)
-
-
 def gray2rgb(grayscale: float) -> tg.Tuple:
     """The function to change grayscale to an RGB tuple
     the grayscale is requeired to be in range of [0, 1]
