@@ -38,7 +38,7 @@ def fuzzifier_determ(D: int, N: int) -> float:
     return 1 + (1418 / N + 22.05) * D**(-2) + (12.33 / N + 0.243) * D**(-0.0406 * math.log(N) - 0.1134)
 
 
-def dataloder(database_conf: tg.Dict, select_sql: str) -> pd.DataFrame:
+def data_loder(database_conf: tg.Dict, select_sql: str) -> pd.DataFrame:
     HOST = database_conf['host']
     USER = database_conf['user']
     PASS = database_conf['pass']
