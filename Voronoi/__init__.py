@@ -59,7 +59,7 @@ def voronoi_dump(cell_info: pd.DataFrame, out_file=tg.TextIO, label: tg.Optional
     for i in range(len(cells)):
         region = vor.regions[vor.point_region[i]]
         if -1 not in region:
-            output[int(labels[i])] = [vor.vertices[j] for j in region]
+            output[int(labels[i])].append([vor.vertices[j] for j in region])
 
     print("data=", file=out_file, end='')
     json.dump(output, out_file, cls=NumpyAndPandasEncoder)
