@@ -52,7 +52,7 @@ def voronoi_dump(cell_info: pd.DataFrame, out_file=tg.TextIO, label: tg.Optional
 
     clusters = np.unique(labels)
 
-    output = {}
+    output = {'clusters': clusters}
     for x in clusters:
         output[int(x)] = []
 
@@ -61,6 +61,6 @@ def voronoi_dump(cell_info: pd.DataFrame, out_file=tg.TextIO, label: tg.Optional
         if -1 not in region:
             output[int(labels[i])].append([vor.vertices[j] for j in region])
 
-    print("function data() {\n    return ", file=out_file, end='')
+    print("var data = ", file=out_file, end='')
     json.dump(output, out_file, cls=NumpyAndPandasEncoder, indent=indent, sort_keys=bool)
-    print("    ;\n};", file=out_file)
+    print(";", file=out_file)
