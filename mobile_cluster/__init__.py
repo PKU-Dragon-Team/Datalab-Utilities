@@ -22,12 +22,6 @@ def fuzzifier_determ(D: int, N: int) -> float:
 
 
 def data_loder(database_conf: tg.Dict, select_sql: str) -> pd.DataFrame:
-    HOST = database_conf['host']
-    USER = database_conf['user']
-    PASS = database_conf['pass']
-    DATABASE = database_conf['database']
-    CHARSET = database_conf['charset']
-    connection = pymysql.connect(host=HOST, user=USER, password=PASS, db=DATABASE, charset=CHARSET, cursorclass=pymysql.cursors.DictCursor)
-    dframe = pd.read_sql(select_sql, connection)
-    connection.close()
+    with pymysql.connect(host=database_conf['host'], user=database_conf['user'], password=database_conf['pass'], db=database_conf['database'], charset=database_conf['charset'], cursorclass=pymysql.cursors.DictCursor) as connection:
+        dframe = pd.read_sql(select_sql, connection)
     return dframe
