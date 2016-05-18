@@ -41,7 +41,7 @@ def voronoi_plot(cell_info: pd.DataFrame, color_set: tg.Optional[tg.Sequence]=No
             ax.fill(z[0], z[1], color=color[i])
 
 
-def voronoi_dump(cell_info: pd.DataFrame, out_file=tg.TextIO, label: tg.Optional[tg.Sequence]=None, indent: int=4, sort_keys: bool=True) -> None:
+def voronoi_dump(cell_info: pd.DataFrame, out_file=tg.TextIO, label: tg.Optional[tg.Sequence]=None, indent: int=4) -> None:
     cells = np.asarray(cell_info[['x', 'y']])
     if label is None:
         labels = np.zeros((cells.shape[0], 1), dtype=int)
@@ -62,5 +62,5 @@ def voronoi_dump(cell_info: pd.DataFrame, out_file=tg.TextIO, label: tg.Optional
             output[int(labels[i])].append([vor.vertices[j] for j in region])
 
     print("var data = ", file=out_file, end='')
-    json.dump(output, out_file, cls=NumpyAndPandasEncoder, indent=indent, sort_keys=bool)
+    json.dump(output, out_file, cls=NumpyAndPandasEncoder, indent=indent)
     print(";", file=out_file)
