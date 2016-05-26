@@ -15,11 +15,11 @@ from scipy.spatial import Voronoi
 __location__ = os.path.join(os.getcwd(), os.path.dirname(os.path.realpath(__file__)))
 
 
-def voronoi_plot(cell_info: pd.DataFrame, color_set: tg.Optional[tg.Sequence]=None, target_axes: tg.Optional[matplotlib.axes.Axes]=None) -> None:
+def voronoi_plot(X: np.ndarray, color_set: tg.Optional[tg.Sequence]=None, target_axes: tg.Optional[matplotlib.axes.Axes]=None) -> None:
     """the function to compute and show voronoi figure
-    cell_info is supposed to have column x and column y which contains the position of each point
+    X[:, 0] and X[: 1] is consider as x and y
     """
-    cells = np.asarray(cell_info[["x", "y"]])
+    cells = np.asfarray(X)
     color = np.asarray(color_set)
 
     # compute Voronoi tesselation
