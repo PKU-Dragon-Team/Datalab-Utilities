@@ -14,17 +14,17 @@ def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5
         return the index of Cluster point in X and the potential of them
     """
 
-    def cal_potential(xi: int, X: np.matrix, alpha: float):
+    def cal_potential(xi: int, X: np.matrix, alpha: float) -> float:
         """Function calculate the potential of point x become a cluster center
         """
         return np.exp(-alpha * (((X - X[xi, :])**2).sum(axis=1))).sum()
 
-    def cal_new_potential(old_i: int, center: tg.Tuple[float, int], X: np.matrix, p: np.ndarray, beta: float):
+    def cal_new_potential(old_i: int, center: tg.Tuple[float, int], X: np.matrix, p: np.ndarray, beta: float) -> float:
         """Function calculate the updated potential of point x after a new cluster center occurs
         """
         return p[old_i] - center[0] * np.exp(-beta * (((X[old_i, :] - X[center[1], :])**2).sum()))
 
-    def cal_d_min(xi: int, centers: tg.List[tg.Tuple[float, int]], X: np.matrix):
+    def cal_d_min(xi: int, centers: tg.List[tg.Tuple[float, int]], X: np.matrix) -> float:
         """Function calculate the shortest distance between point X[xi, :] and all previous cluster centers
         """
         return math.sqrt(((X[tuple(zip(*centers))[1], :] - X[xi, :])**2).sum(axis=1).min())
