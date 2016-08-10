@@ -33,7 +33,7 @@ def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5
     beta = 4 / (Rb**2)
 
     # calc the first center
-    potential = np.fromiter((cal_potential(i, X, alpha) for i in range(X.shape[0])), dtype=float)
+    potential = np.fromiter((cal_potential(i, X, alpha) for i in range(X.shape[0])), dtype=float) # TODO: use multiprocessing to speed-up this line
     first_center_i = potential.argmax()
     first_center_p = potential[first_center_i]
     centers = [(float(first_center_p), int(first_center_i)), ]  # KDTree is not modifiable, so use plain method
