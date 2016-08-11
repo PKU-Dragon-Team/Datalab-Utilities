@@ -39,7 +39,7 @@ def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5
     centers = [(float(first_center_p), int(first_center_i)), ]  # KDTree is not modifiable, so use plain method
     calculated_count = 1
     print("Center %d detected." % len(centers))
-    potential = np.fromiter((cal_new_potential(i, (first_center_p, first_center_i), X, potential, beta) for i in range(X.shape[0])), dtype=float)
+    potential = np.fromiter((cal_new_potential(i, (first_center_p, first_center_i), X, potential, beta) for i in range(X.shape[0])), dtype=float)  # TODO: use multiprocessing to speed-up this line
     while len(potential) > calculated_count:
         most_potential_i = potential.argmax()
         most_potential_p = potential[most_potential_i]
