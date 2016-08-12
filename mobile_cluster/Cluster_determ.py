@@ -61,7 +61,7 @@ def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5
                 calculated_count += 1
         if accepted:
             centers.append((float(most_potential_p), int(most_potential_i)))
-            potential = np.fromiter((cal_new_potential(i, (most_potential_p, most_potential_i), X, potential, beta) for i in range(X.shape[0])), dtype=float)
+            potential = np.fromiter((cal_new_potential(i, (most_potential_p, most_potential_i), X, potential, beta) for i in range(X.shape[0])), dtype=float) # TODO: use multiprocessing to speed-up this line
             print("Center %d detected." % len(centers))
         else:
             break
