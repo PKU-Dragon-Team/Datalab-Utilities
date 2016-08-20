@@ -9,7 +9,7 @@ import math
 from multiprocessing import Pool
 
 
-def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5, epsilon_lower: float=0.15):
+def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5, epsilon_lower: float=0.15, num_process: int=8):
     """funtion that use the 1994 Fuzzy Model Identification Based on Cluster Estimation method
         return the index of Cluster point in X and the potential of them
     """
