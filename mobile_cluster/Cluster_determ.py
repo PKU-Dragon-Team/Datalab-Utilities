@@ -32,6 +32,11 @@ def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5
     alpha = 4 / (Ra**2)
     beta = 4 / (Rb**2)
 
+    if num_process < 2:
+        MULTI_PROCESS = False
+    else:
+        MULTI_PROCESS = True
+
     # calc the first center
     _potential_iter = (cal_potential(i, X, alpha) for i in range(X.shape[0]))
     potential = np.fromiter(_potential_iter, dtype=float) # TODO: use multiprocessing to speed-up this line
