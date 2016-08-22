@@ -9,7 +9,7 @@ import math
 from multiprocessing import Pool
 
 
-def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5, epsilon_lower: float=0.15, num_process: int=8):
+def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5, epsilon_lower: float=0.15, num_process: int=1):
     """funtion that use the 1994 Fuzzy Model Identification Based on Cluster Estimation method
         return the index of Cluster point in X and the potential of them
     """
@@ -37,42 +37,46 @@ def method_1994(X: np.matrix, Ra: float=2, Rb: float=3, epsilon_upper: float=0.5
     else:
         MULTI_PROCESS = True
 
-    # calc the first center
-    _potential_iter = (cal_potential(i, X, alpha) for i in range(X.shape[0]))
-    potential = np.fromiter(_potential_iter, dtype=float) # TODO: use multiprocessing to speed-up this line
-    first_center_i = potential.argmax()
-    first_center_p = potential[first_center_i]
-    centers = [(float(first_center_p), int(first_center_i)), ]  # KDTree is not modifiable, so use plain method
-    calculated_count = 1
-    print("Center %d detected." % len(centers))
-    _potential_iter = (cal_new_potential(i, (first_center_p, first_center_i), X, potential, beta) for i in range(X.shape[0]))
-    potential = np.fromiter(_potential_iter, dtype=float)  # TODO: use multiprocessing to speed-up this line
-    while len(potential) > calculated_count:
-        most_potential_i = potential.argmax()
-        most_potential_p = potential[most_potential_i]
-        calculated_count += 1
-        while True:
-            if most_potential_p > epsilon_upper * first_center_p:
-                accepted = True
-                break
-            elif most_potential_p < epsilon_lower * first_center_p:
-                accepted = False
-                break
-            elif cal_d_min(most_potential_i, centers, X) / Ra + most_potential_p / first_center_p > 1:
-                accepted = True
-                break
-            else:
-                potential[most_potential_i] = 0
-                most_potential_i = potential.argmax()
-                most_potential_p = potential[most_potential_i]
-                calculated_count += 1
-        if accepted:
-            centers.append((float(most_potential_p), int(most_potential_i)))
-            _potential_iter = (cal_new_potential(i, (most_potential_p, most_potential_i), X, potential, beta) for i in range(X.shape[0]))
-            potential = np.fromiter(_potential_iter, dtype=float) # TODO: use multiprocessing to speed-up this line
-            print("Center %d detected." % len(centers))
+    with Pool(num_process) as p:
+        # calc the first center
+        if MULTI_PROCESS:
+            _potential_iter = p.starmap(cal_potential, ((i, X, alpha) for i in range(X.shape[0])))
         else:
-            break
+            _potential_iter = (cal_potential(i, X, alpha) for i in range(X.shape[0]))
+        potential = np.fromiter(_potential_iter, dtype=float) # TODO: use multiprocessing to speed-up this line
+        first_center_i = potential.argmax()
+        first_center_p = potential[first_center_i]
+        centers = [(float(first_center_p), int(first_center_i)), ]  # KDTree is not modifiable, so use plain method
+        calculated_count = 1
+        print("Center %d detected." % len(centers))
+        _potential_iter = (cal_new_potential(i, (first_center_p, first_center_i), X, potential, beta) for i in range(X.shape[0]))
+        potential = np.fromiter(_potential_iter, dtype=float)  # TODO: use multiprocessing to speed-up this line
+        while len(potential) > calculated_count:
+            most_potential_i = potential.argmax()
+            most_potential_p = potential[most_potential_i]
+            calculated_count += 1
+            while True:
+                if most_potential_p > epsilon_upper * first_center_p:
+                    accepted = True
+                    break
+                elif most_potential_p < epsilon_lower * first_center_p:
+                    accepted = False
+                    break
+                elif cal_d_min(most_potential_i, centers, X) / Ra + most_potential_p / first_center_p > 1:
+                    accepted = True
+                    break
+                else:
+                    potential[most_potential_i] = 0
+                    most_potential_i = potential.argmax()
+                    most_potential_p = potential[most_potential_i]
+                    calculated_count += 1
+            if accepted:
+                centers.append((float(most_potential_p), int(most_potential_i)))
+                _potential_iter = (cal_new_potential(i, (most_potential_p, most_potential_i), X, potential, beta) for i in range(X.shape[0]))
+                potential = np.fromiter(_potential_iter, dtype=float) # TODO: use multiprocessing to speed-up this line
+                print("Center %d detected." % len(centers))
+            else:
+                break
     return tuple(zip(*centers))
 
 
